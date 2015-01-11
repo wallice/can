@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 ## DESCRIPTION
-##       can stores information
+##     can stores stuff
 ##
 ## USAGE
 ##     can <command> [name] [value] [options]
@@ -15,7 +15,7 @@
 ##     help                   Shows this help
 ##
 
-$:.unshift File.join(d = File.dirname(File.realpath(__FILE__)), *%w[.. lib])
+$:.push File.expand_path('../lib', __FILE__)
 
 begin
   require 'can'
@@ -36,19 +36,25 @@ begin
     when ''
       puts "Usage: #{prog} <command> [options]. Try '#{prog} help' for help."
 
-    when 'list'
+    when 'version', '--version', '-v'
+      printf "v%s\n", Can::VERSION
+
+    when 'help', '--help', '-h'
+      system("grep -o '^##.*' #{real} | cut -c 4-")
+
+    when 'list', '-l'
       name = ARGV[1] || nil
       data = can.read_file
       data.each do |k, v|
         puts k
       end
 
-    when 'test'
+    when 'test', '-t'
       name = ARGV[1] || nil
       raise ArgumentError, "A name is required to delete." unless name
       puts "The key '#{name}' " + (can.exists(name) ? "exists" : "does not exist") + "." 
 
-    when 'rm'
+    when 'delete', 'rm', '-d'
       name = ARGV[1] || nil
       raise ArgumentError, "A name is required to delete." unless name
       value = can.get_value name
@@ -56,14 +62,8 @@ begin
       raise RuntimeError, "Failed to delete key '#{name}'." unless can.remove_value name
       puts "Value '#{name}' with value '#{value}' was deleted."
 
-    when 'version'
-      printf "v%s\n", Can::VERSION
-
-    when 'save'
+    when 'save', '-s'
       system("cd /Users/pedro/.dotfiles && git add --all && git commit -m 'Saving more passwords' && git push origin HEAD")
-
-    when 'help'
-      system("grep -o '^##.*' #{real} | cut -c 4-")
 
     when 'set'
       name  = ARGV[1] || nil
