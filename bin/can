@@ -24,69 +24,65 @@ rescue LoadError
   require 'can'
 end
 
+file = "#{ENV['HOME']}/.can"
+can  = Can::Command.new(file)
+prog = File.basename($0)
+real = File.realpath(__FILE__)
+cmd  = ARGV[0] || ''
 
-file    = "#{ENV['HOME']}/.can"
-can     = Can::Command.new(file)
-prog    = File.basename($0)
-real    = File.realpath(__FILE__)
-command = ARGV[0] || ''
+case cmd
+  when ''
+    puts "Usage: #{prog} <command> [options]. Try '#{prog} help'."
 
-begin
-  case command
-    when ''
-      puts "Usage: #{prog} <command> [options]. Try '#{prog} help'."
+  when 'version', '--version', '-v'
+    printf "v%s\n", Can::VERSION
 
-    when 'version', '--version', '-v'
-      printf "v%s\n", Can::VERSION
+  when 'help', '--help', '-h'
+    system("grep -o '^##.*' #{real} | cut -c 4-")
 
-    when 'help', '--help', '-h'
-      system("grep -o '^##.*' #{real} | cut -c 4-")
+  when 'list', '-l'
+    name = ARGV[1] || nil
+    data = can.read_file
+    data.each do |k, v|
+      puts k
+    end
 
-    when 'list', '-l'
-      name = ARGV[1] || nil
-      data = can.read_file
-      data.each do |k, v|
-        puts k
-      end
+  when 'test', '-t'
+    name = ARGV[1] || nil
+    abort "A name is required to delete." unless name
+    puts "The key '#{name}' " + (can.exists(name) ? "exists" : "does not exist") + "." 
 
-    when 'test', '-t'
-      name = ARGV[1] || nil
-      raise ArgumentError, "A name is required to delete." unless name
-      puts "The key '#{name}' " + (can.exists(name) ? "exists" : "does not exist") + "." 
+  when 'delete', 'rm', '-d'
+    name = ARGV[1] || nil
+    abort "A name is required to delete." unless name
+    value = can.get_value name
+    abort "Invalid key '#{name}'." unless value
+    abort "Failed to delete key '#{name}'." unless can.remove_value name
+    puts "Value '#{name}' with value '#{value}' was deleted."
 
-    when 'delete', 'rm', '-d'
-      name = ARGV[1] || nil
-      raise ArgumentError, "A name is required to delete." unless name
-      value = can.get_value name
-      raise RuntimeError, "Invalid key '#{name}'." unless value
-      raise RuntimeError, "Failed to delete key '#{name}'." unless can.remove_value name
-      puts "Value '#{name}' with value '#{value}' was deleted."
+  when 'save', '-s'
+    system("cd /Users/pedro/.dotfiles && git add --all && git commit -m 'Saving more passwords' && git push origin HEAD")
 
-    when 'save', '-s'
-      system("cd /Users/pedro/.dotfiles && git add --all && git commit -m 'Saving more passwords' && git push origin HEAD")
+  when 'set'
+    name  = ARGV[1] || nil
+    value = ARGV[2] || nil
+    abort "You need to provide a name." unless name
+    abort "You need to provide a value." unless value
+    abort "#{name} failed to be set." unless can.set_value(name, value)
 
-    when 'set'
-      name  = ARGV[1] || nil
-      value = ARGV[2] || nil
-      raise ArgumentError, "You need to provide a name." unless name
-      raise ArgumentError, "You need to provide a value." unless value
-      raise RuntimeError, "#{name} failed to be set." unless can.set_value(name, value)
+    system("#{$0} --save")
+    # puts "The key '#{name}' with the value '#{value}' was added."
+    puts "The key '#{name}' was added."
 
-      system("#{$0} --save")
-      # puts "The key '#{name}' with the value '#{value}' was added."
-      puts "The key '#{name}' was added."
+  when 'get'
+    name  = ARGV[1] || nil
+    abort "You need to provide a name." unless name
 
-    when 'get'
-      name  = ARGV[1] || nil
-      raise ArgumentError, "You need to provide a name." unless name
+    value = can.get_value name
+    abort "#{name} failed to be copied." unless can.copy_value value
+    puts "The key '#{name}' was copied."
 
-      value = can.get_value name
-      raise RuntimeError, "#{name} failed to be copied." unless can.copy_value value
-      # puts "The key '#{name}' with the value '#{value}' was copied."
-      puts "The key '#{name}' was copied."
+  else
+    abort "Unknown command '#{cmd}'. Try '#{prog} help'."
 
-  end
-
-rescue Exception => e
-  abort "Error: #{e.message}"
 end
