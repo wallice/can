@@ -34,7 +34,7 @@ command = ARGV[0] || ''
 begin
   case command
     when ''
-      puts "Usage: #{prog} <command> [options]. Try '#{prog} help' for help."
+      puts "Usage: #{prog} <command> [options]. Try '#{prog} help'."
 
     when 'version', '--version', '-v'
       printf "v%s\n", Can::VERSION
