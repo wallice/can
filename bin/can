@@ -1,0 +1,90 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+## DESCRIPTION
+##       can stores information
+##
+## USAGE
+##     can <command> [name] [value] [options]
+##
+## COMMANDS
+##     set [name] [value]     Sets a key
+##     get [name]             Copies a key
+##     rm [name]              Removes a value
+##     list                   Lists all keys
+##     version                Shows the version
+##     help                   Shows this help
+##
+
+$:.unshift File.join(d = File.dirname(File.realpath(__FILE__)), *%w[.. lib])
+
+begin
+  require 'can'
+rescue LoadError
+  require 'rubygems'
+  require 'can'
+end
+
+
+file    = "#{ENV['HOME']}/.can"
+can     = Can::Command.new(file)
+prog    = File.basename($0)
+real    = File.realpath(__FILE__)
+command = ARGV[0] || ''
+
+begin
+  case command
+    when ''
+      puts "Usage: #{prog} <command> [options]. Try '#{prog} help' for help."
+
+    when 'list'
+      name = ARGV[1] || nil
+      data = can.read_file
+      data.each do |k, v|
+        puts k
+      end
+
+    when 'test'
+      name = ARGV[1] || nil
+      raise ArgumentError, "A name is required to delete." unless name
+      puts "The key '#{name}' " + (can.exists(name) ? "exists" : "does not exist") + "." 
+
+    when 'rm'
+      name = ARGV[1] || nil
+      raise ArgumentError, "A name is required to delete." unless name
+      value = can.get_value name
+      raise RuntimeError, "Invalid key '#{name}'." unless value
+      raise RuntimeError, "Failed to delete key '#{name}'." unless can.remove_value name
+      puts "Value '#{name}' with value '#{value}' was deleted."
+
+    when 'version'
+      printf "v%s\n", Can::VERSION
+
+    when 'save'
+      system("cd /Users/pedro/.dotfiles && git add --all && git commit -m 'Saving more passwords' && git push origin HEAD")
+
+    when 'help'
+      system("grep -o '^##.*' #{real} | cut -c 4-")
+
+    when 'set'
+      name  = ARGV[1] || nil
+      value = ARGV[2] || nil
+      raise ArgumentError, "You need to provide a name." unless name
+      raise ArgumentError, "A key cannot start with a dash ('-')."
+
+      raise RuntimeError, "#{name} failed to be set." unless can.set_value(name, value)
+      system("#{$0} --save")
+      puts "The key '#{name}'with the value '#{value}' was added."
+
+    when 'get'
+      name  = ARGV[1] || nil
+      raise ArgumentError, "You need to provide a name." unless name
+
+      value = can.get_value name
+      raise RuntimeError, "#{name} failed to be copied." unless can.copy_value value
+      puts "The key '#{name}' with the value '#{value}' was copied."
+
+  end
+
+rescue Exception => e
+  abort "Error: #{e.message}"
+end
