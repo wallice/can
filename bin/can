@@ -69,11 +69,12 @@ begin
       name  = ARGV[1] || nil
       value = ARGV[2] || nil
       raise ArgumentError, "You need to provide a name." unless name
-      raise ArgumentError, "A key cannot start with a dash ('-')."
-
+      raise ArgumentError, "You need to provide a value." unless value
       raise RuntimeError, "#{name} failed to be set." unless can.set_value(name, value)
+
       system("#{$0} --save")
-      puts "The key '#{name}'with the value '#{value}' was added."
+      # puts "The key '#{name}' with the value '#{value}' was added."
+      puts "The key '#{name}' was added."
 
     when 'get'
       name  = ARGV[1] || nil
@@ -81,7 +82,8 @@ begin
 
       value = can.get_value name
       raise RuntimeError, "#{name} failed to be copied." unless can.copy_value value
-      puts "The key '#{name}' with the value '#{value}' was copied."
+      # puts "The key '#{name}' with the value '#{value}' was copied."
+      puts "The key '#{name}' was copied."
 
   end
 
