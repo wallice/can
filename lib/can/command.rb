@@ -14,11 +14,13 @@ module Can
     def read_file
       begin
         content = File.read @file
+        content = decrypt(content, @key)
       rescue
         content = ''
       end
 
-      json = content.length > 0 ? Zlib::Inflate.inflate(content) : '{}'
+      # json = content.length > 0 ? uncompress(content) : '{}'
+      json = content.length > 0 ? content : '{}'
       data = JSON.parse(json)
     end
 
@@ -44,9 +46,18 @@ module Can
       cipher.update(encrypted) + cipher.final
     end
 
+    def compress data
+      Zlib::Deflate.deflate data
+    end
+
+    def uncompress data
+      Zlib::Inflate.inflate data
+    end
+
     def write_file data
       json = JSON.dump(data)
-      content = Zlib::Deflate.deflate(json)
+      # content = compress(json)
+      content = decrypt(json, @key)
       File.write(@file, content)
     end
 

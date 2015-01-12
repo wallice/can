@@ -17,12 +17,12 @@ def encrypt data, key
 
   enc = Base64.strict_encode64(encrypted) + '--' + Base64.strict_encode64(iv)
   enc = encode enc
-  # enc = compress enc
+  enc = compress enc
   enc
 end
 
 def decrypt data, key
-  # data = uncompress data
+  data = uncompress data
   data = decode data
   encrypted, iv = data.split('--').map {|v| Base64.strict_decode64(v)}
   cipher = OpenSSL::Cipher::Cipher.new('AES-256-CBC')
@@ -42,18 +42,12 @@ def decode(s)
 end
 
 def compress data
-  Zlib::Inflate.inflate data
-  # data
+  Zlib::Deflate.deflate data
 end
 
 def uncompress data
-  Zlib::Deflate.deflate data
-  # data
+  Zlib::Inflate.inflate data
 end
 
-
-mess = encrypt data, key
-back = decrypt mess, key
-
-puts mess
-puts back
+puts mess = encrypt(data, key)
+puts back = decrypt(mess, key)

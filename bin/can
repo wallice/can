@@ -24,7 +24,7 @@ rescue LoadError
   require 'can'
 end
 
-file = "#{ENV['HOME']}/.can"
+file = "#{ENV['HOME']}/.can2"
 can  = Can::Command.new(file)
 prog = File.basename($0)
 real = File.realpath(__FILE__)
@@ -48,30 +48,22 @@ case cmd
     end
 
   when 'test', '-t'
-    name = ARGV[1] || nil
-    abort "A name is required to delete." unless name
+    name = ARGV[1] || abort("A name is required to delete.")
     puts "The key '#{name}' " + (can.exists(name) ? "exists" : "does not exist") + "." 
 
   when 'delete', 'rm', '-d'
-    name = ARGV[1] || nil
-    abort "A name is required to delete." unless name
-    value = can.get_value name
-    abort "Invalid key '#{name}'." unless value
-    abort "Failed to delete key '#{name}'." unless can.remove_value name
+    name = ARGV[1] || abort("A name is required to delete.")
+    value = can.get_value(name) || abort("Invalid key '#{name}'.")
+    can.remove_value(name) || abort("Failed to delete key '#{name}'.")
     puts "Value '#{name}' with value '#{value}' was deleted."
 
-  when 'save', '-s'
-    system("cd /Users/pedro/.dotfiles && git add --all && git commit -m 'Saving more passwords' && git push origin HEAD")
+  # when 'save', '-s'
+  #   system("cd /Users/pedro/.dotfiles && git add --all && git commit -m 'Saving more passwords' && git push origin HEAD")
 
   when 'set'
-    name  = ARGV[1] || nil
-    value = ARGV[2] || nil
-    abort "You need to provide a name." unless name
-    abort "You need to provide a value." unless value
-    abort "#{name} failed to be set." unless can.set_value(name, value)
-
-    system("#{$0} --save")
-    # puts "The key '#{name}' with the value '#{value}' was added."
+    name  = ARGV[1] || abort("You need to provide a name.")
+    value = ARGV[2] || abort("You need to provide a value.")
+    can.set_value(name, value) || abort "#{name} failed to be set."
     puts "The key '#{name}' was added."
 
   when 'get'
