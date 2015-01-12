@@ -1,3 +1,6 @@
+require 'openssl'
+require 'base64'
+require 'digest/sha1'
 
 module Can
 
@@ -5,6 +8,7 @@ module Can
 
     def initialize file
       @file = file
+      @key  = Digest::SHA1.hexdigest('yourpass')
     end
 
     def read_file
@@ -16,6 +20,28 @@ module Can
 
       json = content.length > 0 ? Zlib::Inflate.inflate(content) : '{}'
       data = JSON.parse(json)
+    end
+
+    def encrypt data, key
+      cipher = OpenSSL::Cipher::Cipher.new('AES-256-CBC')
+      cipher.encrypt
+      cipher.key = key
+      cipher.iv  = iv = cipher.random_iv
+
+      encrypted = cipher.update(data) + cipher.final
+
+      Base64.strict_encode64(encrypted) + '--' + Base64.strict_encode64(iv)
+    end
+
+    def decrypt data, key
+      encrypted, iv = data.split('--').map {|v| Base64.strict_decode64(v)}
+
+      cipher = OpenSSL::Cipher::Cipher.new('AES-256-CBC')
+      cipher.decrypt
+      cipher.key = key
+      cipher.iv = iv
+
+      cipher.update(encrypted) + cipher.final
     end
 
     def write_file data

@@ -1,4 +1,5 @@
 require 'rubygems'
+require 'openssl'
 require 'json'
 require 'zlib'
 
