@@ -29,7 +29,6 @@ require 'rubygems'
 require 'openssl'
 require 'json'
 require 'zlib'
-require 'openssl'
 require 'base64'
 require 'digest/sha1'
 
@@ -81,9 +80,9 @@ module Can
     def read
       begin
         content = File.read @file
-        # content = uncompress(content)
-        content = decode(content)
-        content = decrypt(content, @key)
+        # content = Utils.uncompress(content)
+        content = Utils.decode(content)
+        content = Utils.decrypt(content, @key)
       rescue
         content = ''
       end
@@ -93,13 +92,16 @@ module Can
 
     def write data
       json = JSON.dump(data)
-      content = encrypt(json, @key)
-      content = encode(content)
-      # content = compress(content)
+      content = Utils.encrypt(json, @key)
+      content = Utils.encode(content)
+      # content = Utils.compress(content)
       File.write(@file, content)
     end
+  end
 
-    def encrypt data, key
+  class Utils
+
+   def self.encrypt data, key
       cipher = OpenSSL::Cipher::Cipher.new('AES-256-CBC')
       cipher.encrypt
       cipher.key = key
@@ -109,7 +111,7 @@ module Can
       Base64.strict_encode64(encrypted) + '--' + Base64.strict_encode64(iv)
     end
 
-    def decrypt data, key
+    def self.decrypt data, key
       encrypted, iv = data.split('--').map {|v| Base64.strict_decode64(v)}
 
       cipher = OpenSSL::Cipher::Cipher.new('AES-256-CBC')
@@ -120,19 +122,19 @@ module Can
       cipher.update(encrypted) + cipher.final
     end
 
-    def encode data
+    def self.encode data
       data.unpack('H*').first
     end
 
-    def decode data
+    def self.decode data
       data.scan(/../).map { |x| x.hex }.pack('c*')
     end
 
-    def compress data
+    def self.compress data
       Zlib::Deflate.deflate data
     end
 
-    def uncompress data
+    def self.uncompress data
       Zlib::Inflate.inflate data
     end
 
