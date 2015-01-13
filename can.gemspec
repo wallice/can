@@ -1,11 +1,9 @@
-# coding: utf-8
-$:.push File.expand_path('../lib', __FILE__)
-
-require 'can'
+# $:.push File.expand_path('../lib', __FILE__)
+# require 'can'
 
 Gem::Specification.new do |s|
   s.name          = 'can'
-  s.version       = Can::VERSION
+  s.version       = `./bin/can version`
   s.authors       = ['ptdorf']
   s.email         = ['ptdorf@gmail.com']
   s.homepage      = 'https://rubygems.org/gems/can'
@@ -14,6 +12,7 @@ Gem::Specification.new do |s|
   s.license       = 'MIT'
 
   s.files         = `git ls-files`.split $/
+  s.files         = ['bin/can']
   s.executables   = s.files.grep(%r{^bin/}) { |f| File.basename f }
-  s.require_paths = ['lib']
+  # s.require_paths = ['lib']
 end

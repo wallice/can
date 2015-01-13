@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
-# encoding: UTF-8
 ## DESCRIPTION
 ##     can stores stuff
 ##
@@ -15,15 +14,134 @@
 ##     help                   Shows this help
 ##
 
-$:.push File.expand_path('../lib', __FILE__)
+# $:.push File.expand_path('../lib', __FILE__)
+# 
+# begin
+#   require 'can'
+# rescue LoadError
+#   require 'rubygems'
+#   # require 'can'
+# end
 
-begin
-  require 'can'
-rescue LoadError
-  require 'rubygems'
-  require 'can'
+
+### Contents of lib/can.rb
+require 'rubygems'
+require 'openssl'
+require 'json'
+require 'zlib'
+require 'openssl'
+require 'base64'
+require 'digest/sha1'
+
+module Can
+  VERSION = '0.4.0'
+
+  class Command
+
+    def initialize file
+      @file = file
+      @key  = Digest::SHA1.hexdigest('yourpass')
+    end
+
+    def list name = nil
+      data = read()
+      data.each do |k, v|
+        puts k
+      end
+    end
+
+    def exists name
+      data = read()
+      data[name] ? true : false
+    end    
+
+    def get name
+      data = read()
+      data[name] || nil
+    end    
+
+    def copy value
+      IO.popen('pbcopy', 'w') { |cc| cc.write(value) }
+      value
+    end  
+
+    def set name, value
+      data = read()
+      data[name] = value
+      write(data)
+    end  
+
+    def remove name
+      data = read()
+      data.delete name
+      write(data)
+    end  
+
+    private
+    def read
+      begin
+        content = File.read @file
+        # content = uncompress(content)
+        content = decode(content)
+        content = decrypt(content, @key)
+      rescue
+        content = ''
+      end
+
+      data = content.length > 0 ? JSON.parse(content) : {}
+    end
+
+    def write data
+      json = JSON.dump(data)
+      content = encrypt(json, @key)
+      content = encode(content)
+      # content = compress(content)
+      File.write(@file, content)
+    end
+
+    def encrypt data, key
+      cipher = OpenSSL::Cipher::Cipher.new('AES-256-CBC')
+      cipher.encrypt
+      cipher.key = key
+      cipher.iv  = iv = cipher.random_iv
+      encrypted  = cipher.update(data) + cipher.final
+
+      Base64.strict_encode64(encrypted) + '--' + Base64.strict_encode64(iv)
+    end
+
+    def decrypt data, key
+      encrypted, iv = data.split('--').map {|v| Base64.strict_decode64(v)}
+
+      cipher = OpenSSL::Cipher::Cipher.new('AES-256-CBC')
+      cipher.decrypt
+      cipher.key = key
+      cipher.iv = iv
+
+      cipher.update(encrypted) + cipher.final
+    end
+
+    def encode(s)
+      s.unpack('H*').first
+    end
+
+    def decode(s)
+      s.scan(/../).map { |x| x.hex }.pack('c*')
+    end
+
+    def compress data
+      Zlib::Deflate.deflate data
+    end
+
+    def uncompress data
+      Zlib::Inflate.inflate data
+    end
+
+  end
+
 end
 
+
+### Contents of bin/can
 file = "#{ENV['HOME']}/.can2"
 can  = Can::Command.new(file)
 prog = File.basename($0)
@@ -31,50 +149,37 @@ real = File.realpath(__FILE__)
 cmd  = ARGV[0] || ''
 
 case cmd
+  when 'version', '--version', '-v'
+    printf "%s\n", Can::VERSION
+  when 'help'
+    system("grep -o '^##.*' #{real} | cut -c 4-")
+  when 'list'
+    name = ARGV[1]
+    can.list name
+  when 'test'
+    name  = ARGV[1]           or abort("A name is required to delete.")
+    exist = can.exists(name)  or abort("The key '#{name}' does not exist.")
+    puts "The key '#{name}' does exist."
+  when 'delete', 'rm'
+    name  = ARGV[1]           or abort("A name is required to delete.")
+    # exist = can.exists(name)  or abort("Invalid key '#{name}'.")
+    can.remove(name)  or abort("Failed to delete key '#{name}'.")
+    puts "Value '#{name}' with value '#{value}' was deleted."
+  when 'save', '-s'
+    # system("cd /Users/pedro/.dotfiles && git add --all && git commit -m 'Saving more passwords' && git push origin HEAD")
+  when 'set'
+    name  = ARGV[1]         or abort("You need to provide a name.")
+    value = ARGV[2]         or abort("You need to provide a value.")
+    can.set(name, value)    or abort("#{name} failed to be set.")
+    puts "The key '#{name}' was added."
+  when 'get'
+    name  = ARGV[1]         or abort("You need to provide a name.")
+    value = can.get(name)   or abort("The key'#{name}' was not found.")
+    can.copy(value)         or abort("#{name} failed to be copied.")
+    puts "The key '#{name}' was copied."
   when ''
     puts "Usage: #{prog} <command> [options]. Try '#{prog} help'."
-
-  when 'version', '--version', '-v'
-    printf "v%s\n", Can::VERSION
-
-  when 'help', '--help', '-h'
-    system("grep -o '^##.*' #{real} | cut -c 4-")
-
-  when 'list', '-l'
-    name = ARGV[1] || nil
-    data = can.read_file
-    data.each do |k, v|
-      puts k
-    end
-
-  when 'test', '-t'
-    name = ARGV[1] || abort("A name is required to delete.")
-    puts "The key '#{name}' " + (can.exists(name) ? "exists" : "does not exist") + "." 
-
-  when 'delete', 'rm', '-d'
-    name = ARGV[1] || abort("A name is required to delete.")
-    value = can.get_value(name) || abort("Invalid key '#{name}'.")
-    can.remove_value(name) || abort("Failed to delete key '#{name}'.")
-    puts "Value '#{name}' with value '#{value}' was deleted."
-
-  # when 'save', '-s'
-  #   system("cd /Users/pedro/.dotfiles && git add --all && git commit -m 'Saving more passwords' && git push origin HEAD")
-
-  when 'set'
-    name  = ARGV[1] || abort("You need to provide a name.")
-    value = ARGV[2] || abort("You need to provide a value.")
-    can.set_value(name, value) || abort "#{name} failed to be set."
-    puts "The key '#{name}' was added."
-
-  when 'get'
-    name  = ARGV[1] || nil
-    abort "You need to provide a name." unless name
-
-    value = can.get_value name
-    abort "#{name} failed to be copied." unless can.copy_value value
-    puts "The key '#{name}' was copied."
-
   else
     abort "Unknown command '#{cmd}'. Try '#{prog} help'."
-
 end
+
