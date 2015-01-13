@@ -120,12 +120,12 @@ module Can
       cipher.update(encrypted) + cipher.final
     end
 
-    def encode(s)
-      s.unpack('H*').first
+    def encode data
+      data.unpack('H*').first
     end
 
-    def decode(s)
-      s.scan(/../).map { |x| x.hex }.pack('c*')
+    def decode data
+      data.scan(/../).map { |x| x.hex }.pack('c*')
     end
 
     def compress data
@@ -162,24 +162,22 @@ case cmd
     puts "The key '#{name}' does exist."
   when 'delete', 'rm'
     name  = ARGV[1]           or abort("A name is required to delete.")
-    # exist = can.exists(name)  or abort("Invalid key '#{name}'.")
-    can.remove(name)  or abort("Failed to delete key '#{name}'.")
+    can.remove(name)          or abort("Failed to delete key '#{name}'.")
     puts "Value '#{name}' with value '#{value}' was deleted."
   when 'save', '-s'
     # system("cd /Users/pedro/.dotfiles && git add --all && git commit -m 'Saving more passwords' && git push origin HEAD")
   when 'set'
-    name  = ARGV[1]         or abort("You need to provide a name.")
-    value = ARGV[2]         or abort("You need to provide a value.")
-    can.set(name, value)    or abort("#{name} failed to be set.")
+    name  = ARGV[1]           or abort("You need to provide a name.")
+    value = ARGV[2]           or abort("You need to provide a value.")
+    can.set(name, value)      or abort("#{name} failed to be set.")
     puts "The key '#{name}' was added."
   when 'get'
-    name  = ARGV[1]         or abort("You need to provide a name.")
-    value = can.get(name)   or abort("The key'#{name}' was not found.")
-    can.copy(value)         or abort("#{name} failed to be copied.")
+    name  = ARGV[1]           or abort("You need to provide a name.")
+    value = can.get(name)     or abort("The key'#{name}' was not found.")
+    can.copy(value)           or abort("#{name} failed to be copied.")
     puts "The key '#{name}' was copied."
   when ''
     puts "Usage: #{prog} <command> [options]. Try '#{prog} help'."
   else
     abort "Unknown command '#{cmd}'. Try '#{prog} help'."
 end
-
