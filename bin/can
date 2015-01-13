@@ -14,17 +14,7 @@
 ##     help                   Shows this help
 ##
 
-# $:.push File.expand_path('../lib', __FILE__)
-# 
-# begin
-#   require 'can'
-# rescue LoadError
-#   require 'rubygems'
-#   # require 'can'
-# end
-
-
-### Contents of lib/can.rb
+# lib/can.rb contents
 require 'rubygems'
 require 'openssl'
 require 'json'
@@ -81,6 +71,7 @@ module Can
       begin
         content = File.read @file
         # content = Utils.uncompress(content)
+        content = Utils.unpack(content)
         content = Utils.decode(content)
         content = Utils.decrypt(content, @key)
       rescue
@@ -94,6 +85,7 @@ module Can
       json = JSON.dump(data)
       content = Utils.encrypt(json, @key)
       content = Utils.encode(content)
+      content = Utils.pack(content)
       # content = Utils.compress(content)
       File.write(@file, content)
     end
@@ -138,12 +130,20 @@ module Can
       Zlib::Inflate.inflate data
     end
 
+    def self.pack data
+      data.scan(/.{1,80}/).join("\n")
+    end
+
+    def self.unpack data
+      data.split("\n").join('')
+    end
+
   end
 
 end
 
 
-### Contents of bin/can
+# bin/can contents
 file = "#{ENV['HOME']}/.can2"
 can  = Can::Command.new(file)
 prog = File.basename($0)
@@ -166,8 +166,8 @@ case cmd
     name  = ARGV[1]           or abort("A name is required to delete.")
     can.remove(name)          or abort("Failed to delete key '#{name}'.")
     puts "Value '#{name}' with value '#{value}' was deleted."
-  when 'save', '-s'
-    # system("cd /Users/pedro/.dotfiles && git add --all && git commit -m 'Saving more passwords' && git push origin HEAD")
+  # when 'sync', 'save', '-s'
+  #   system("cd /Users/pedro/.dotfiles && git add --all && git commit -m 'Saving more passwords' && git push origin HEAD")
   when 'set'
     name  = ARGV[1]           or abort("You need to provide a name.")
     value = ARGV[2]           or abort("You need to provide a value.")
