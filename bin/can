@@ -1,14 +1,8 @@
 #!/usr/bin/env ruby
-## DESCRIPTION
-##     can stores stuff
-##
-## USAGE
-##     can <command> [name] [value] [options]
-##
-## COMMANDS
-##     set [name] [value]     Sets a key
-##     get [name]             Copies a key
-##     rm [name]              Removes a value
+## Commands:
+##     set  NAME VALUE        Sets a key
+##     get  NAME              Copies a key
+##     rm   NAME              Removes a value
 ##     list                   Lists all keys
 ##     version                Shows the version
 ##     help                   Shows this help
@@ -36,6 +30,7 @@ module Can
 
     def list name = nil
       data = read()
+      p data
       data.each do |k, v|
         puts k
       end
@@ -60,6 +55,7 @@ module Can
       data = read()
       data[name] = value
       write(data)
+      p data
     end  
 
     def remove name
@@ -80,6 +76,7 @@ module Can
       content = File.read file
       content = Utils.join(content)
       content = Utils.decrypt(content, password)
+      puts content
     end  
 
     private
@@ -96,8 +93,8 @@ module Can
 
       begin
         content = File.read @file
-        content = Utils.uncompress(content)
-        content = Utils.join(content)
+        # content = Utils.uncompress(content)
+        content = Utils.clean(content)
         content = Utils.decode(content)
         content = Utils.decrypt(content, @password)
       rescue
@@ -112,7 +109,7 @@ module Can
       content = Utils.encrypt(content, @password)
       content = Utils.encode(content)
       content = Utils.neat(content)
-      content = Utils.compress(content)
+      # content = Utils.compress(content)
       File.write(@file, content)
     end
   end
@@ -193,7 +190,7 @@ module Can
       data.scan(/.{1,64}/).join("\n")
     end
 
-    def self.join data
+    def self.clean data
       data.split("\n").join('')
     end
 
@@ -261,6 +258,8 @@ case cmd
     #   password = ARGV.shift
     # end
     puts can.decrypt ARGV.shift, password
+  when 'cat'
+    system "cat #{file}"
   else
     abort "Unknown command '#{cmd}'. Try '#{prog} help'."
 end
