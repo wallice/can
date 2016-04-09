@@ -11,6 +11,8 @@ $LOAD_PATH.unshift(File.expand_path(File.dirname(__FILE__)) + "/../lib")
 ##   help              Shows this help
 ##
 
+require "can"
+
 file = "#{ENV['HOME']}/.can2"
 can  = Can::Command.new(file)
 prog = File.basename($0)
