@@ -1,11 +1,11 @@
 #!/usr/bin/env ruby
 ## Commands:
-##     set  NAME VALUE        Sets a key
-##     get  NAME              Copies a key
-##     rm   NAME              Removes a value
-##     list                   Lists all keys
-##     version                Shows the version
-##     help                   Shows this help
+##   set  NAME VALUE   Sets a key
+##   get  NAME         Copies a key
+##   rm   NAME         Removes a value
+##   list              Lists all keys
+##   version           Shows the version
+##   help              Shows this help
 ##
 
 # lib/can.rb contents
@@ -20,7 +20,7 @@ require 'io/console'
 
 
 module Can
-  VERSION = '0.4.1'
+  VERSION = '0.4.2'
 
   class Command
 
@@ -30,7 +30,6 @@ module Can
 
     def list name = nil
       data = read()
-      p data
       data.each do |k, v|
         puts k
       end
@@ -76,7 +75,6 @@ module Can
       content = File.read file
       content = Utils.join(content)
       content = Utils.decrypt(content, password)
-      puts content
     end  
 
     private
@@ -93,7 +91,7 @@ module Can
 
       begin
         content = File.read @file
-        # content = Utils.uncompress(content)
+        # content = Utils.unzip(content)
         content = Utils.clean(content)
         content = Utils.decode(content)
         content = Utils.decrypt(content, @password)
@@ -109,7 +107,7 @@ module Can
       content = Utils.encrypt(content, @password)
       content = Utils.encode(content)
       content = Utils.neat(content)
-      # content = Utils.compress(content)
+      # content = Utils.zip(content)
       File.write(@file, content)
     end
   end
@@ -178,11 +176,11 @@ module Can
       data.scan(/../).map { |x| x.hex }.pack('c*')
     end
 
-    def self.compress data
+    def self.zip data
       Zlib::Deflate.deflate data
     end
 
-    def self.uncompress data
+    def self.unzip data
       Zlib::Inflate.inflate data
     end
 
@@ -207,12 +205,10 @@ real = File.realpath(__FILE__)
 cmd  = ARGV[0] || ''
 
 case cmd
-  when ''
-    puts "Usage: #{prog} <command> [options]. Try '#{prog} help'."
-  when 'version', '--version', '-v'
-    printf "%s\n", Can::VERSION
-  when 'help'
+  when '', 'help'
     system("grep -o '^##.*' #{real} | cut -c 4-")
+  when 'version', '--version', '-v'
+    puts "v#{Can::VERSION}"
   when 'list'
     name = ARGV[1]
     can.list name
@@ -225,7 +221,7 @@ case cmd
     can.remove(name)          or abort("Failed to delete key '#{name}'.")
     puts "Value '#{name}' with value '#{value}' was deleted."
   when 'sync', 'save', '-s'
-    system("cd /Users/pedro/.dotfiles && git add --all && git pp")
+    puts "To do"
   when 'set'
     name  = ARGV[1]           or abort("You need to provide a name.")
     value = ARGV[2]           or abort("You need to provide a value.")
