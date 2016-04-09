@@ -1,9 +1,12 @@
-# $:.push File.expand_path('../lib', __FILE__)
-# require 'can'
+# coding: utf-8
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
+require "can"
 
 Gem::Specification.new do |spec|
   spec.name          = 'can'
-  spec.version       = `bin/can version`
+  spec.version       = Can::Command::VERSION
   spec.authors       = ['ptdorf']
   spec.email         = ['ptdorf@gmail.com']
   spec.homepage      = 'https://rubygemspec.org/gems/can'
