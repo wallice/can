@@ -7,7 +7,6 @@ Gem::Specification.new do |spec|
   spec.authors       = ['ptdorf']
   spec.email         = ['ptdorf@gmail.com']
   spec.homepage      = 'https://rubygemspec.org/gems/can'
-  spec.homepage      = "https://github.com/ptdorf/deploy-cli"
   spec.summary       = 'Can stores stuff'
   spec.description   = 'Can stores useful information and other amazing thingspec.'
   spec.license       = 'MIT'
