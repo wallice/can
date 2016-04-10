@@ -13,7 +13,7 @@ unless String.method_defined?(:bold)
   end
 end
 
-FILE = "#{ENV['HOME']}/.can2"
+FILE = "#{ENV['HOME']}/.can"
 CAN  = Can::Command.new(FILE)
 
 module Can
