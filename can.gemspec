@@ -15,7 +15,10 @@ Gem::Specification.new do |spec|
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split $/
-  spec.files         = ["bin/can"]
+  spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename f }
-  # spec.require_paths = ["lib"]
+  spec.require_paths = ["lib"]
+
+  spec.add_dependency "thor"
+  spec.add_development_dependency "rake"
 end
