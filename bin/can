@@ -2,75 +2,76 @@
 # encoding: UTF-8
 $LOAD_PATH.unshift(File.expand_path(File.dirname(__FILE__)) + "/../lib")
 
-## Commands:
-##   set  NAME VALUE   Sets a key
-##   get  NAME         Copies a key
-##   rm   NAME         Removes a value
-##   list              Lists all keys
-##   version           Shows the version
-##   help              Shows this help
-##
-
+require "thor"
 require "can"
 
-file = "#{ENV['HOME']}/.can2"
-can  = Can::Command.new(file)
-prog = File.basename($0)
-real = File.realpath(__FILE__)
-cmd  = ARGV[0] || ''
-
-case cmd
-  when '', 'help'
-    system("grep -o '^##.*' #{real} | cut -c 4-")
-  when 'version', '--version', '-v'
-    puts "v#{Can::VERSION}"
-  when 'list'
-    name = ARGV[1]
-    can.list name
-  when 'test'
-    name  = ARGV[1]           or abort("A name is required to delete.")
-    exist = can.exists(name)  or abort("The key '#{name}' does not exist.")
-    puts "The key '#{name}' does exist."
-  when 'delete', 'rm'
-    name  = ARGV[1]           or abort("A name is required to delete.")
-    can.remove(name)          or abort("Failed to delete key '#{name}'.")
-    puts "Value '#{name}' with value '#{value}' was deleted."
-  when 'sync', 'save', '-s'
-    puts "To do"
-  when 'set'
-    name  = ARGV[1]           or abort("You need to provide a name.")
-    value = ARGV[2]           or abort("You need to provide a value.")
-    can.set(name, value)      or abort("#{name} failed to be set.")
-    puts "The key '#{name}' was added."
-  when 'get', 'show'
-    name  = ARGV[1]           or abort("You need to provide a name.")
-    value = can.get(name)     or abort("The key'#{name}' was not found.")
-    puts "#{value}"
-  when 'cp', 'copy'
-    name  = ARGV[1]           or abort("You need to provide a name.")
-    value = can.get(name)     or abort("The key '#{name}' was not found.")
-    can.copy(value)           or abort("#{name} failed to be copied.")
-    puts "The value for '#{name}' was copied."
-  when 'encrypt'
-    ARGV.shift
-    password = 'a'
-    # password = nil
-    # if ARGV.include? '-p'
-    #   ARGV.shift
-    #   password = ARGV.shift
-    # end
-    puts can.encrypt ARGV.shift, password
-  when 'decrypt'
-    ARGV.shift
-    password = 'a'
-    # password = nil
-    # if ARGV.include? '-p'
-    #   ARGV.shift
-    #   password = ARGV.shift
-    # end
-    puts can.decrypt ARGV.shift, password
-  when 'cat'
-    system "cat #{file}"
-  else
-    abort "Unknown command '#{cmd}'. Try '#{prog} help'."
+unless String.method_defined?(:bold)
+  class ::String
+    def bold(*args)
+      "\033[1m#{self}\033[0m"
+    end
+  end
 end
+
+FILE = "#{ENV['HOME']}/.can2"
+CAN  = Can::Command.new(FILE)
+
+module Can
+  class Cli < Thor
+
+    desc "version", "Show the version"
+    def version
+      puts "v#{Can::VERSION}"
+    end
+
+    desc "ls", "Lists all keys"
+    def ls
+        CAN.list
+    end
+
+    desc "get KEY", "Gets a key"
+    def get key
+      puts CAN.get(name)
+    end
+
+    desc "copy KEY", "Copies a key"
+    def get key
+      CAN.copy(name)
+      puts "Key #{name.bold} was copied."
+    end
+
+    desc "set KEY VALUE", "Stores a key"
+    def get key, value
+      CAN.set name, value
+      puts "Key #{name.bold} was saved."
+    end
+
+    desc "rm KEY", "Removes a key"
+    def rm key
+      CAN.remove name
+      puts "Key #{key} was deleted."
+    end
+
+    desc "cat", "Shows the encrypted file"
+    def cat
+      system "cat #{FILE}"
+      puts
+    end
+
+    private
+    def method_missing name, *args
+      name = name.to_s
+      value = args[0]
+      if value
+        CAN.set name, value
+        puts "The key #{name.bold} was set."
+      else
+        value = CAN.get(name)
+        CAN.copy value
+        puts "The value for #{name.bold} was copied."
+      end
+    end
+  end
+end
+
+Can::Cli.start ARGV
