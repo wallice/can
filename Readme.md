@@ -12,6 +12,7 @@ Stores encrypted information.
 
     $ can
     Commands:
+      can get KEY         # Copies a key
       can help [COMMAND]  # Describe available commands or one specific command
       can ls              # Lists all keys
       can rm KEY          # Removes a key
