@@ -31,7 +31,7 @@ module Can
     end
 
     desc "set KEY VALUE", "Stores a key"
-    def get key, value
+    def set key, value
       CAN.set key, value
       puts "Key #{key.bold} was saved."
     end
