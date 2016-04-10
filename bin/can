@@ -19,48 +19,32 @@ CAN  = Can::Command.new(FILE)
 module Can
   class Cli < Thor
 
-    # desc "version", "Show the version"
-    # def version
-    #   puts "v#{Can::VERSION}"
-    # end
-
     desc "ls", "Lists all keys"
     def ls
         CAN.list
     end
 
-    # desc "get KEY", "Gets a key"
-    # def get key
-    #   puts CAN.get(name)
-    # end
-
-    desc "copy KEY", "Copies a key"
+    desc "get KEY", "Copies a key"
     def get key
-      CAN.copy(name)
-      puts "Key #{name.bold} was copied."
+      CAN.copy key
+      puts "Key #{key.bold} was copied."
     end
 
     desc "set KEY VALUE", "Stores a key"
     def get key, value
-      CAN.set name, value
-      puts "Key #{name.bold} was saved."
+      CAN.set key, value
+      puts "Key #{key.bold} was saved."
     end
 
     desc "rm KEY", "Removes a key"
     def rm key
-      CAN.remove name
-      puts "Key #{key} was deleted."
+      CAN.remove key
+      puts "Key #{key.bold} was deleted."
     end
-
-    # desc "cat", "Shows the encrypted file"
-    # def cat
-    #   system "cat #{FILE}"
-    #   puts
-    # end
 
     private
     def method_missing name, *args
-      name = name.to_s
+      name  = name.to_s
       value = args[0]
       if value
         CAN.set name, value
