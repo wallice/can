@@ -12,9 +12,9 @@ Stores encrypted information.
 
     $ can
     Commands:
-      set  NAME VALUE   Sets a key
-      get  NAME         Copies a key
-      rm   NAME         Removes a value
-      list              Lists all keys
-      version           Shows the version
-      help              Shows this help
+      can cat             # Shows the encrypted file
+      can help [COMMAND]  # Describe available commands or one specific command
+      can ls              # Lists all keys
+      can rm KEY          # Removes a key
+      can set KEY VALUE   # Stores a key
+      can version         # Show the version
