@@ -1,6 +1,6 @@
 # Can
 
-Stores encrypted information.
+Stores encrypted goodies.
 
 
 ### Installation
