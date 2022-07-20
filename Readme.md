@@ -3,12 +3,12 @@
 Stores encrypted goodies.
 
 
-### Installation
+## Installation
 
     gem install can
 
 
-### Usage
+## Usage
 
     $ can
     Commands:
